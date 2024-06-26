@@ -1,8 +1,6 @@
 ﻿using App.Data;
 using Microsoft.AspNetCore.Mvc;
-using App.MediaTypes;
 using App.Services;
-using App.Services.Dto;
 
 namespace App.Controllers
 {
@@ -18,14 +16,12 @@ namespace App.Controllers
 
         [HttpPost]
         [Route("[controller]/{key:int}")]
-        [Consumes(MediaTypeNames.Text.Json)]
-        public void CalculateData([FromRoute] int key, [FromBody]CalculationData data)
+        [Consumes("text/json")]
+        public CalculatedData CalculateData([FromRoute] int key, [FromBody]CalculationInputData data)
         {
-            var item = _storageService.SaveDataIntoStorage(new ItemDataDto
-            {
-                Key = key,
-                Value = data.Input,
-            });
+            var calculatedData = _storageService.SaveDataIntoStorageAndNotify(key, data.Input);
+
+            return calculatedData;
         }
     }
 }

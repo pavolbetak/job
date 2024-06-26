@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  jobDb:
+    image: postgres:13
+    container_name: jobDb
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: jobdb
+    ports:
+      - "5400:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: appPostgresAdmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@job.sk
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5401:80"
+    depends_on:
+      - jobDb
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # webapi:
+  #   image: your_webapi_image
+  #   container_name: webapi
+  #   depends_on:
+  #     - postgres
+  #     - rabbitmq
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ConnectionStrings__PostgreSQL: "Host=postgres;Database=your_db;Username=your_user;Password=your_password"
+  #     RabbitMQ__Host: "rabbitmq"
+  #   ports:
+  #     - "5000:80"
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

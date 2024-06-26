@@ -1,4 +1,6 @@
-using Autofac.Extensions.DependencyInjection;
+using App.Database;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace App
 {
@@ -8,18 +10,31 @@ namespace App
         {
             var builder = CreateHostBuilder(args);
 
-            // Add services to the container.
-
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbBuilder = new DbContextOptionsBuilder<AppDbContext>();
+                dbBuilder.UseNpgsql(AppConst.DatabaseConnectionString);
+                var options = dbBuilder.Options;
+
+                var db = new AppDbContext(options);
+                try
+                {
+                    db.Database.ExecuteSql($"CREATE DATABASE jobDb");
+                }
+                catch (PostgresException postEx) when (postEx.Message.Contains("exist"))
+                {
+                    Console.WriteLine("INFO : Database already exist");
+                }
+                db.Database.Migrate();
+            }
 
             app.Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();

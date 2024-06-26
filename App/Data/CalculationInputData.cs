@@ -1,6 +1,6 @@
 ﻿namespace App.Data
 {
-    public class CalculationData
+    public class CalculationInputData
     {
         public decimal Input { get; set; }
     }

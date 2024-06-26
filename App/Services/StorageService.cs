@@ -1,58 +1,71 @@
-﻿using App.Calculation;
-using App.Data;
-using App.Database;
-using App.Services.Dto;
+﻿using App.Data;
+using App.RabbitMq;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace App.Services
 {
     public class StorageService
     {
-        private Storage _storage;
+        private IMemoryCache _cache;
 
-        private Calculator _calculator;
+        private MessageBroker _messageBroker;
 
-        public StorageService(Storage storage, Calculator calculator)
+        public StorageService(IMemoryCache cache, MessageBroker messageBroker)
         {
-            _storage = storage;
-            _calculator = calculator;
+            _cache = cache;
+            _messageBroker = messageBroker;
         }
 
-        public ItemDataDto SaveDataIntoStorage(ItemDataDto item)
+        public CalculatedData SaveDataIntoStorageAndNotify(int key, decimal inputValue)
         {
-            item.PreviousDate = GetUpdateDateForItem(item.Key);
-            item.Value = AddItemIntoStorage(item.Key, item);
-            item.UpdateDate = GetUpdateDateForItem(item.Key);
-            
-            return item;
+            var calculatedData = CalculatedAndStoreData(key, inputValue);
+
+            _messageBroker.PublishCalculationData(calculatedData);
+
+            return calculatedData;
         }
 
-        private decimal AddItemIntoStorage(int key, ItemDataDto item)
+        private CalculatedData CalculatedAndStoreData(int key, decimal inputValue)
         {
-            const double oldItemTreshold = 15;
             const decimal defaultItemValue = 2;
+            const double maxOldnestSeconds = 15;
 
-            var existingItem = _storage.GetItem(key);
-            if (existingItem == null || existingItem.UpdateDate > DateTime.UtcNow.AddSeconds(oldItemTreshold))
+            //  not recommended storing user data input cache => unpredictable amount of memery
+            if (!_cache.TryGetValue(key, out TimestampValue data))
             {
-                _storage.AddOrUpdateNewItem(key, new Item(defaultItemValue));
+                // should have expiration date/time, depends on data behaviour
+                _cache.Set(key, new TimestampValue{
+                    Timestamp = DateTime.UtcNow,
+                    Value = defaultItemValue
+                });
 
-                return defaultItemValue;
+                return new CalculatedData { PreviousValue = null, ComputatedValue = defaultItemValue, inputValue = inputValue };
             }
-            else
+
+            if(DateTime.UtcNow - data.Timestamp > TimeSpan.FromSeconds(maxOldnestSeconds))
             {
-                var calculatedItemValue = (decimal)_calculator.CalculateItemData((double)item.Value);
+                var newValue = new TimestampValue { Timestamp = DateTime.UtcNow, Value = defaultItemValue };
 
-                _storage.AddOrUpdateNewItem(key, new Item(calculatedItemValue));
+                _cache.Set(key, newValue);
 
-                return calculatedItemValue;
+                return new CalculatedData { PreviousValue = data.Value, ComputatedValue = newValue.Value, inputValue = inputValue };
             }
-        }
 
-        private DateTime? GetUpdateDateForItem(int key)
-        {
-            var item = _storage.GetItem(key);
+            // Can lost precision (double)value
+            // TODO: Exception decimal => double
+            var calculatedValue = Math.Pow(Math.Log((double)inputValue), 3);
+            var newCalculatedValue = new TimestampValue { Timestamp = DateTime.UtcNow, Value = (decimal)calculatedValue };
 
-            return item != null ? item.UpdateDate : null;
+            _cache.Set(key, newCalculatedValue);
+
+            return new CalculatedData { PreviousValue = data.Value, ComputatedValue = newCalculatedValue.Value, inputValue = inputValue };
         }
+    }
+
+    public record TimestampValue
+    {
+        public DateTime Timestamp { get; init; }
+
+        public decimal Value { get; init; }
     }
 }
