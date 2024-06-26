@@ -60,11 +60,11 @@ namespace App.HostedServices
                 byte[] body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
-                Console.WriteLine(message);
+                Log.Information(message);
             }
             catch (Exception ex)
             {
-                // should be logged
+                Log.Error("Problem with parse information", ex);
             }
         }
     }

@@ -15,6 +15,7 @@ namespace App
             Configuration = configuration;
 
             Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
                 .MinimumLevel.Debug()
                 .CreateLogger();
 
@@ -37,11 +38,13 @@ namespace App
             services.AddSingleton(sp =>
             {
                 // Read from configuration
-                var factory = new ConnectionFactory { HostName = "localhost", UserName = "admin", Password="admin" };
+                var factory = new ConnectionFactory { HostName = AppConst.RabbitMqHostName, UserName = "admin", Password = "admin" };
                 var connection = factory.CreateConnection();
 
                 return connection;
             });
+
+            services.AddSwaggerGen();
 
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(AppConst.DatabaseConnectionString));
         }
@@ -54,11 +57,19 @@ namespace App
             {
                 e.MapControllers();
             });
+
+            app.UseSwagger();
+            app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                options.RoutePrefix = string.Empty;
+            });
         }
 
         private void LoadConstants()
         {
             AppConst.DatabaseConnectionString = Configuration["ConnectionStrings:Default"];
+            AppConst.RabbitMqHostName = Configuration["RabbitMq:HostName"];
         }
     }
 }

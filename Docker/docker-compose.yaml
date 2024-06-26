@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: jobdb
     ports:
-      - "5400:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
   
@@ -36,18 +36,20 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
-  # webapi:
-  #   image: your_webapi_image
-  #   container_name: webapi
-  #   depends_on:
-  #     - postgres
-  #     - rabbitmq
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     ConnectionStrings__PostgreSQL: "Host=postgres;Database=your_db;Username=your_user;Password=your_password"
-  #     RabbitMQ__Host: "rabbitmq"
-  #   ports:
-  #     - "5000:80"
+  app:
+    image: app:0.01
+    container_name: app
+    restart: always
+    environment:
+      - ConnectionStrings__Default
+      - RabbitMq__HostName
+    ports:
+      - "5001:8080"
+
+networks:
+  default:
+    external:
+      name: job-network
 
 volumes:
   postgres_data:

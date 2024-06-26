@@ -1,6 +1,7 @@
 using App.Database;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Serilog;
 
 namespace App
 {
@@ -25,9 +26,10 @@ namespace App
                 }
                 catch (PostgresException postEx) when (postEx.Message.Contains("exist"))
                 {
-                    Console.WriteLine("INFO : Database already exist");
+                    Log.Information("INFO : Database already exist");
                 }
                 db.Database.Migrate();
+
             }
 
             app.Run();
