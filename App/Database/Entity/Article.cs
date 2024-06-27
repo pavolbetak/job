@@ -2,9 +2,9 @@
 {
     public class Article
     {
-        public long Id { get; set; } // Primary key
-        public string Title { get; set; } // Index
-        public virtual ICollection<Author> Authors { get; set; } // Many-To-Many
-        public virtual Site Site { get; set; } // One-To-Many
+        public long Id { get; set; }
+        public string Title { get; set; }
+        public virtual ICollection<Author> Authors { get; set; }
+        public virtual Site Site { get; set; }
     }
 }

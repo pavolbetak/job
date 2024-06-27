@@ -39,7 +39,7 @@ namespace App.Services
                     Value = defaultItemValue
                 });
 
-                return new CalculatedData { PreviousValue = null, ComputatedValue = defaultItemValue, inputValue = inputValue };
+                return new CalculatedData { PreviousValue = null, ComputedValue = defaultItemValue, InputValue = inputValue };
             }
 
             if(DateTime.UtcNow - data.Timestamp > TimeSpan.FromSeconds(maxOldnestSeconds))
@@ -48,7 +48,7 @@ namespace App.Services
 
                 _cache.Set(key, newValue);
 
-                return new CalculatedData { PreviousValue = data.Value, ComputatedValue = newValue.Value, inputValue = inputValue };
+                return new CalculatedData { PreviousValue = data.Value, ComputedValue = newValue.Value, InputValue = inputValue };
             }
 
             // Can lost precision (double)value
@@ -58,7 +58,7 @@ namespace App.Services
 
             _cache.Set(key, newCalculatedValue);
 
-            return new CalculatedData { PreviousValue = data.Value, ComputatedValue = newCalculatedValue.Value, inputValue = inputValue };
+            return new CalculatedData { PreviousValue = data.Value, ComputedValue = newCalculatedValue.Value, InputValue = inputValue };
         }
     }
 

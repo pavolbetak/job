@@ -8,9 +8,9 @@ namespace App.Data
         public decimal? PreviousValue{ get; set; }
 
         [JsonPropertyName("computed_value")]
-        public decimal ComputatedValue{ get; set; }
+        public decimal ComputedValue{ get; set; }
 
         [JsonPropertyName("input_value")]
-        public decimal inputValue { get; set; }
+        public decimal InputValue { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using App.Database;
+using App.Database.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Serilog;
@@ -7,32 +8,22 @@ namespace App
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
+
             var builder = CreateHostBuilder(args);
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
-                var dbBuilder = new DbContextOptionsBuilder<AppDbContext>();
-                dbBuilder.UseNpgsql(AppConst.DatabaseConnectionString);
-                var options = dbBuilder.Options;
+                await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+            }        
 
-                var db = new AppDbContext(options);
-                try
-                {
-                    db.Database.ExecuteSql($"CREATE DATABASE jobDb");
-                }
-                catch (PostgresException postEx) when (postEx.Message.Contains("exist"))
-                {
-                    Log.Information("INFO : Database already exist");
-                }
-                db.Database.Migrate();
-
-            }
-
-            app.Run();
+            await app.RunAsync();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

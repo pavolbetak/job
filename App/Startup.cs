@@ -1,9 +1,12 @@
 ﻿using App.Database;
+using App.Database.Migrations;
 using App.HostedServices;
 using App.RabbitMq;
 using App.Services;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 using Serilog;
 
 namespace App
@@ -13,19 +16,17 @@ namespace App
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .MinimumLevel.Debug()
-                .CreateLogger();
-
-            LoadConstants();
         }
 
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            var databaseConnectionString = Configuration["ConnectionStrings:Default"];
+            var rabbitMqHostName = Configuration["RabbitMq:HostName"];
+            var rabbitMqUserName = Configuration["RabbitMq:UserName"];
+            var rabbitMqPassword = Configuration["RabbitMq:Password"];
+
             services.AddControllers();
 
             services.AddMemoryCache();
@@ -37,16 +38,30 @@ namespace App
 
             services.AddSingleton(sp =>
             {
-                // Read from configuration
-                var factory = new ConnectionFactory { HostName = AppConst.RabbitMqHostName, UserName = "admin", Password = "admin" };
-                var connection = factory.CreateConnection();
+                for (int i = 0; i < 5; i++)
+                {
+                    try
+                    {
+                        // Read from configuration
+                        var factory = new ConnectionFactory { HostName = rabbitMqHostName, UserName = rabbitMqUserName, Password = rabbitMqPassword };
+                        var connection = factory.CreateConnection();
 
-                return connection;
+                        return connection;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Cannot connect to RabbitMq - Retrying");
+
+                        Thread.Sleep(3000);
+                    }
+                }
+
+                throw new InvalidOperationException("Failed to connect RabbitMq");
             });
 
             services.AddSwaggerGen();
 
-            services.AddDbContext<AppDbContext>(options => options.UseNpgsql(AppConst.DatabaseConnectionString));
+            services.AddDbContext<AppDbContext>(options => options.UseNpgsql(databaseConnectionString));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -64,12 +79,6 @@ namespace App
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 options.RoutePrefix = string.Empty;
             });
-        }
-
-        private void LoadConstants()
-        {
-            AppConst.DatabaseConnectionString = Configuration["ConnectionStrings:Default"];
-            AppConst.RabbitMqHostName = Configuration["RabbitMq:HostName"];
         }
     }
 }

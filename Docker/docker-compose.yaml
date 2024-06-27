@@ -28,23 +28,28 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: ${RabbitMq__UserName}
+      RABBITMQ_DEFAULT_PASS: ${RabbitMq__Password}
     ports:
       - "5672:5672"
       - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+    # volumes:
+    #   - rabbitmq_data:/var/lib/rabbitmq
 
   app:
-    image: app:0.01
+    image: app
     container_name: app
     restart: always
     environment:
       - ConnectionStrings__Default
       - RabbitMq__HostName
+      - RabbitMq__UserName
+      - RabbitMq__Password
     ports:
       - "5001:8080"
+    build:
+      context: ../
+      dockerfile: ./Dockerfile
 
 networks:
   default:
@@ -53,4 +58,4 @@ networks:
 
 volumes:
   postgres_data:
-  rabbitmq_data:
+  # rabbitmq_data:
