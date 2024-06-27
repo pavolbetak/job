@@ -2,6 +2,16 @@
 <p>docker compose up -d</p>
 </br>
 <h1>APIs:</h1>
-<p>Swagger -> http://localhost:5001/index.html</p>
-<p></p>RabbitMq -> http://localhost:15672/              admin/admin</p>
-<p></p>PgAdmin -> http://localhost:5401/                admin@job.sk/admin      HostName: jobDb   Port:5432</p>
+<ul>
+  <li>Swagger -> http://localhost:5001/index.html</li>
+  <li>RabbitMq -> http://localhost:15672/</li>
+    <ul>
+      <li>admin/admin</li>
+    </ul>
+  <li>PgAdmin -> http://localhost:5401/</li>
+    <ul>
+      <li>admin@job.sk/admin</li>
+      <li>HostName: jobDb</li>
+      <li>Port:5432</li>
+    </ul>
+</ul>
