@@ -1,5 +1,4 @@
 ﻿using App.Database;
-using App.Database.Migrations;
 using App.HostedServices;
 using App.RabbitMq;
 using App.Services;
