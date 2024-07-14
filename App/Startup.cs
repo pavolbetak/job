@@ -3,9 +3,7 @@ using App.HostedServices;
 using App.RabbitMq;
 using App.Services;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Exceptions;
 using Serilog;
 
 namespace App
