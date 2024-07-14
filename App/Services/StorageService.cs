@@ -52,7 +52,6 @@ namespace App.Services
             }
 
             // Can lost precision (double)value
-            // TODO: Exception decimal => double
             var calculatedValue = Math.Pow(Math.Log((double)inputValue), 3);
             var newCalculatedValue = new TimestampValue { Timestamp = DateTime.UtcNow, Value = (decimal)calculatedValue };
 
