@@ -36,7 +36,6 @@ namespace App.RabbitMq
         {
             channel.ExchangeDeclare(exchange: Exchange, type: ExchangeType.Fanout);
 
-            // declare a server-named queue
             var queueName = channel.QueueDeclare().QueueName;
             channel.QueueBind(queue: queueName,
                               exchange: Exchange,
